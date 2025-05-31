@@ -27,7 +27,7 @@ class CommunityTipBot {
 
     // Add footer to all bot messages
     addFooter(message) {
-        return `${message}\n\n<i>Powered by Aegisum EcoSystem</i>`;
+        return `${message}\n\nPowered by Aegisum EcoSystem`;
     }
 
     // Enhanced sendMessage with automatic footer
@@ -161,7 +161,7 @@ class CommunityTipBot {
             };
 
             await this.sendMessage(msg.chat.id,
-                '🌟 Welcome to Aegisum Tip Bot!\n\n' +
+                '🌟 Welcome to Community TipBot!\n\n' +
                 '🪙 Supported coins: AEGS, SHIC, PEPE, ADVC\n\n' +
                 '🔐 This bot creates non-custodial wallets - you control your private keys!\n\n' +
                 'Choose an option to get started:',

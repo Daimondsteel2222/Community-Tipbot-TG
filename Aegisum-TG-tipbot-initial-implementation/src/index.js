@@ -64,7 +64,7 @@ class CommunityTipBotApp {
             logger.info('Initializing background workers...');
             this.workers = new WorkerManager(this.db, this.blockchain, this.wallet, this.bot);
 
-            logger.info('Aegisum Tip Bot initialized successfully');
+            logger.info('Community TipBot initialized successfully');
 
         } catch (error) {
             logger.error('Initialization failed:', error);
@@ -79,7 +79,7 @@ class CommunityTipBotApp {
                 return;
             }
 
-            logger.info('Starting Aegisum Tip Bot...');
+            logger.info('Starting Community TipBot...');
 
             // Start Telegram bot
             this.bot.start();
