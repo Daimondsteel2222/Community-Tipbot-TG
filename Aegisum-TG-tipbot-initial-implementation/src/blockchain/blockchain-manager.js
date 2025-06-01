@@ -57,9 +57,19 @@ class BlockchainManager {
                 };
                 
                 if (isConnected) {
-                    const info = await client.getBlockchainInfo();
-                    results[coin].blockHeight = info.blocks;
-                    results[coin].network = info.chain;
+                    let info;
+                    // Use correct RPC method for each coin
+                    if (coin === 'AEGS' || coin === 'ADVC') {
+                        // Modern daemons use getblockchaininfo
+                        info = await client.getBlockchainInfo();
+                        results[coin].blockHeight = info.blocks;
+                        results[coin].network = info.chain;
+                    } else if (coin === 'SHIC' || coin === 'PEPE') {
+                        // Older daemons use getinfo
+                        info = await client.getInfo();
+                        results[coin].blockHeight = info.blocks;
+                        results[coin].network = info.testnet ? 'test' : 'main';
+                    }
                 }
             } catch (error) {
                 results[coin] = {
