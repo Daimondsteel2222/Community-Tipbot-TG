@@ -414,43 +414,68 @@ class BlockchainManager {
         }
     }
 
+    // Get user addresses from database
+    async getUserAddresses(userId, coinSymbol) {
+        try {
+            // This should query the database for user's addresses
+            // For now, we'll get the address from the account system
+            const client = this.getClient(coinSymbol);
+            const accountName = `user_${userId}`;
+            
+            try {
+                const addresses = await client.call('getaddressesbyaccount', [accountName]);
+                return addresses || [];
+            } catch (error) {
+                this.logger.warn(`Could not get addresses for account ${accountName}: ${error.message}`);
+                return [];
+            }
+        } catch (error) {
+            this.logger.error(`Failed to get user addresses for ${userId} (${coinSymbol}):`, error);
+            return [];
+        }
+    }
+
     async getUserWalletBalance(userId, coinSymbol, confirmations = 1) {
         try {
             const client = this.getClient(coinSymbol);
-            
-            // Special handling for AEGS - use "*" for all accounts
-            if (coinSymbol === 'AEGS') {
-                const totalBalance = await client.call('getbalance', ['*', confirmations]);
-                
-                // Get user's specific addresses to calculate their balance
-                const userAddresses = await this.getUserAddresses(userId, coinSymbol);
-                if (!userAddresses || userAddresses.length === 0) {
-                    return 0;
-                }
-                
-                let userBalance = 0;
-                for (const address of userAddresses) {
-                    try {
-                        const addressBalance = await client.call('getreceivedbyaddress', [address, confirmations]);
-                        userBalance += parseFloat(addressBalance) || 0;
-                    } catch (error) {
-                        this.logger.warn(`Could not get balance for address ${address}: ${error.message}`);
-                    }
-                }
-                
-                return userBalance;
-            }
-            
-            // For other coins, use account-based balance
             const accountName = `user_${userId}`;
-            return await client.call('getbalance', [accountName, confirmations]);
+            
+            // For all coins, use account-based balance first
+            try {
+                const balance = await client.call('getbalance', [accountName, confirmations]);
+                return parseFloat(balance) || 0;
+            } catch (error) {
+                this.logger.warn(`Account balance failed for ${accountName}, trying address-based method:`, error.message);
+                
+                // Fallback: try address-based balance for AEGS
+                if (coinSymbol === 'AEGS') {
+                    const userAddresses = await this.getUserAddresses(userId, coinSymbol);
+                    if (!userAddresses || userAddresses.length === 0) {
+                        return 0;
+                    }
+                    
+                    let userBalance = 0;
+                    for (const address of userAddresses) {
+                        try {
+                            const addressBalance = await client.call('getreceivedbyaddress', [address, confirmations]);
+                            userBalance += parseFloat(addressBalance) || 0;
+                        } catch (error) {
+                            this.logger.warn(`Could not get balance for address ${address}: ${error.message}`);
+                        }
+                    }
+                    
+                    return userBalance;
+                }
+                
+                return 0;
+            }
             
         } catch (error) {
             this.logger.error('Failed to get wallet balance', {
                 userId,
                 coinSymbol,
                 error: error.message,
-                service: 'aegisum-tipbot'
+                service: 'community-tipbot'
             });
             return 0;
         }

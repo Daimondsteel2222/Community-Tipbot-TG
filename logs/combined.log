@@ -395,3 +395,7 @@
 {"level":"info","message":"Stopping airdrop manager...","service":"aegisum-tipbot","timestamp":"2025-06-01 02:32:00"}
 {"level":"info","message":"All workers stopped successfully","service":"aegisum-tipbot","timestamp":"2025-06-01 02:32:00"}
 {"level":"info","message":"Telegram bot stopped","service":"aegisum-tipbot","timestamp":"2025-06-01 02:32:00"}
+{"level":"info","message":"RPC client initialized for AEGS","service":"aegisum-tipbot","timestamp":"2025-06-01 04:21:26"}
+{"level":"info","message":"RPC client initialized for SHIC","service":"aegisum-tipbot","timestamp":"2025-06-01 04:21:26"}
+{"level":"info","message":"RPC client initialized for PEPE","service":"aegisum-tipbot","timestamp":"2025-06-01 04:21:26"}
+{"level":"info","message":"RPC client initialized for ADVC","service":"aegisum-tipbot","timestamp":"2025-06-01 04:21:26"}

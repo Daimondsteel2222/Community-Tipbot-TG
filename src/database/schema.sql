@@ -1,4 +1,4 @@
--- Aegisum Telegram Tip Bot Database Schema
+-- Community TipBot Database Schema
 
 -- Users table - stores Telegram user information and wallet data
 CREATE TABLE IF NOT EXISTS users (

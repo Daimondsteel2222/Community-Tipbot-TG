@@ -27,7 +27,7 @@ class CommunityTipBot {
 
     // Add footer to all bot messages
     addFooter(message) {
-        return `${message}\n\nPowered by Aegisum EcoSystem`;
+        return `${message}\n\n<i>Powered by Aegisum EcoSystem</i>`;
     }
 
     // Enhanced sendMessage with automatic footer
@@ -230,12 +230,12 @@ class CommunityTipBot {
             let message = '📥 Your Deposit Addresses:\n\n';
             
             for (const [coin, address] of Object.entries(addresses)) {
-                message += `${coin}:\n\`${address}\`\n\n`;
+                message += `${coin}:\n<code>${address}</code>\n\n`;
             }
 
             message += '⚠️ Only send the corresponding coin to each address!';
 
-            await this.sendMessage(msg.chat.id, message, { parse_mode: 'Markdown' });
+            await this.sendMessage(msg.chat.id, message);
 
         } catch (error) {
             this.logger.error('Deposit command error:', error);

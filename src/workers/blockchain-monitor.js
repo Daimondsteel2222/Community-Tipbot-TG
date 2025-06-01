@@ -439,51 +439,51 @@ class BlockchainMonitor {
             switch (type) {
                 case 'deposit':
                     emoji = '💰';
-                    message = `${emoji} *Deposit ${status === 'confirmed' ? 'Confirmed' : 'Detected'}*\n\n`;
-                    message += `💎 *Amount:* ${amount} ${coinSymbol}\n`;
-                    message += `🔗 *Transaction:* \`${txid}\`\n`;
+                    message = `${emoji} <b>Deposit ${status === 'confirmed' ? 'Confirmed' : 'Detected'}</b>\n\n`;
+                    message += `💎 <b>Amount:</b> ${amount} ${coinSymbol}\n`;
+                    message += `🔗 <b>Transaction:</b> <code>${txid}</code>\n`;
                     if (blockHeight) {
-                        message += `📦 *Block:* ${blockHeight}\n`;
+                        message += `📦 <b>Block:</b> ${blockHeight}\n`;
                     }
-                    message += `✅ *Status:* ${status === 'confirmed' ? 'Confirmed' : 'Pending'}\n\n`;
-                    message += `_Powered by Aegisum EcoSystem_`;
+                    message += `✅ <b>Status:</b> ${status === 'confirmed' ? 'Confirmed' : 'Pending'}\n\n`;
+                    message += `<i>Powered by Aegisum EcoSystem</i>`;
                     break;
 
                 case 'confirmation':
                     emoji = '✅';
-                    message = `${emoji} *Transaction Confirmed*\n\n`;
-                    message += `💎 *Amount:* ${amount} ${coinSymbol}\n`;
-                    message += `🔗 *Transaction:* \`${txid}\`\n`;
+                    message = `${emoji} <b>Transaction Confirmed</b>\n\n`;
+                    message += `💎 <b>Amount:</b> ${amount} ${coinSymbol}\n`;
+                    message += `🔗 <b>Transaction:</b> <code>${txid}</code>\n`;
                     if (blockHeight) {
-                        message += `📦 *Block:* ${blockHeight}\n`;
+                        message += `📦 <b>Block:</b> ${blockHeight}\n`;
                     }
-                    message += `✅ *Status:* Confirmed\n\n`;
-                    message += `_Powered by Aegisum EcoSystem_`;
+                    message += `✅ <b>Status:</b> Confirmed\n\n`;
+                    message += `<i>Powered by Aegisum EcoSystem</i>`;
                     break;
 
                 case 'withdrawal':
                     emoji = '📤';
-                    message = `${emoji} *Withdrawal ${status === 'confirmed' ? 'Confirmed' : 'Sent'}*\n\n`;
-                    message += `💎 *Amount:* ${amount} ${coinSymbol}\n`;
-                    message += `🔗 *Transaction:* \`${txid}\`\n`;
+                    message = `${emoji} <b>Withdrawal ${status === 'confirmed' ? 'Confirmed' : 'Sent'}</b>\n\n`;
+                    message += `💎 <b>Amount:</b> ${amount} ${coinSymbol}\n`;
+                    message += `🔗 <b>Transaction:</b> <code>${txid}</code>\n`;
                     if (blockHeight) {
-                        message += `📦 *Block:* ${blockHeight}\n`;
+                        message += `📦 <b>Block:</b> ${blockHeight}\n`;
                     }
-                    message += `✅ *Status:* ${status === 'confirmed' ? 'Confirmed' : 'Pending'}\n\n`;
-                    message += `_Powered by Aegisum EcoSystem_`;
+                    message += `✅ <b>Status:</b> ${status === 'confirmed' ? 'Confirmed' : 'Pending'}\n\n`;
+                    message += `<i>Powered by Aegisum EcoSystem</i>`;
                     break;
 
                 default:
-                    message = `🔔 *Transaction Update*\n\n`;
-                    message += `💎 *Amount:* ${amount} ${coinSymbol}\n`;
-                    message += `🔗 *Transaction:* \`${txid}\`\n`;
-                    message += `✅ *Status:* ${status}\n\n`;
-                    message += `_Powered by Aegisum EcoSystem_`;
+                    message = `🔔 <b>Transaction Update</b>\n\n`;
+                    message += `💎 <b>Amount:</b> ${amount} ${coinSymbol}\n`;
+                    message += `🔗 <b>Transaction:</b> <code>${txid}</code>\n`;
+                    message += `✅ <b>Status:</b> ${status}\n\n`;
+                    message += `<i>Powered by Aegisum EcoSystem</i>`;
             }
 
             // Send notification to user
             await this.telegramBot.sendMessage(user.telegram_id, message, {
-                parse_mode: 'Markdown',
+                parse_mode: 'HTML',
                 disable_web_page_preview: true
             });
 
