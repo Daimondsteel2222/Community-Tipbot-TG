@@ -103,23 +103,38 @@ class BlockchainMonitor {
         }
     }
 
-    async processBlock(coinSymbol, height) {
+    async processBlock(coinSymbol, blockHeight) {
         try {
             const client = this.blockchain.getClient(coinSymbol);
-            const blockHash = await client.getBlockHash(height);
-            const block = await client.getBlock(blockHash, 2); // Get full transaction details
-
-            if (!block || !block.tx) {
-                return;
-            }
-
+            const blockHash = await client.call('getblockhash', [blockHeight]);
+            const block = await client.call('getblock', [blockHash, true]);
+            
             // Process each transaction in the block
-            for (const tx of block.tx) {
-                await this.processTransaction(coinSymbol, tx, height);
+            for (const txid of block.tx) {
+                try {
+                    const transaction = await client.call('gettransaction', [txid]);
+                    
+                    // Check if this transaction involves any of our addresses
+                    if (transaction.details) {
+                        for (const detail of transaction.details) {
+                            if (detail.category === 'receive' && detail.amount > 0) {
+                                await this.blockchain.processTransaction(detail, coinSymbol, blockHeight);
+                            }
+                        }
+                    }
+                } catch (txError) {
+                    // Transaction might not be in wallet, skip
+                    continue;
+                }
             }
-
+            
         } catch (error) {
-            this.logger.error(`Block processing error for ${coinSymbol} at height ${height}:`, error);
+            this.logger.error('Error processing block', {
+                coinSymbol,
+                blockHeight,
+                error: error.message,
+                service: 'aegisum-tipbot'
+            });
         }
     }
 

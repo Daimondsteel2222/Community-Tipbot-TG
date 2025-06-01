@@ -404,17 +404,44 @@ class BlockchainManager {
         }
     }
 
-    async getUserWalletBalance(telegramId, coinSymbol) {
+    async getUserWalletBalance(userId, coinSymbol, confirmations = 1) {
         try {
             const client = this.getClient(coinSymbol);
-            const accountName = `user_${telegramId}`;
             
-            // Get balance for this specific account
-            const balance = await client.getBalance(accountName, 1);
-            return balance || 0;
+            // Special handling for AEGS - use "*" for all accounts
+            if (coinSymbol === 'AEGS') {
+                const totalBalance = await client.call('getbalance', ['*', confirmations]);
+                
+                // Get user's specific addresses to calculate their balance
+                const userAddresses = await this.getUserAddresses(userId, coinSymbol);
+                if (!userAddresses || userAddresses.length === 0) {
+                    return 0;
+                }
+                
+                let userBalance = 0;
+                for (const address of userAddresses) {
+                    try {
+                        const addressBalance = await client.call('getreceivedbyaddress', [address, confirmations]);
+                        userBalance += parseFloat(addressBalance) || 0;
+                    } catch (error) {
+                        this.logger.warn(`Could not get balance for address ${address}: ${error.message}`);
+                    }
+                }
+                
+                return userBalance;
+            }
+            
+            // For other coins, use account-based balance
+            const accountName = `user_${userId}`;
+            return await client.call('getbalance', [accountName, confirmations]);
             
         } catch (error) {
-            this.logger.error(`Failed to get wallet balance for user ${telegramId} on ${coinSymbol}:`, error);
+            this.logger.error('Failed to get wallet balance', {
+                userId,
+                coinSymbol,
+                error: error.message,
+                service: 'aegisum-tipbot'
+            });
             return 0;
         }
     }
@@ -503,3 +530,97 @@ class BlockchainManager {
 }
 
 module.exports = BlockchainManager;
+
+    async processTransaction(transaction, coinSymbol, blockHeight) {
+        try {
+            // Check if this is a deposit to a user address
+            if (transaction.category === 'receive' && transaction.amount > 0) {
+                const userId = await this.getUserIdByAddress(transaction.address, coinSymbol);
+                if (userId) {
+                    // Send pending notification (0 confirmations)
+                    if (transaction.confirmations === 0) {
+                        await this.sendDepositNotification(userId, coinSymbol, transaction.amount, 'pending', transaction.txid);
+                    }
+                    // Send confirmed notification (1+ confirmations)
+                    else if (transaction.confirmations >= 1) {
+                        await this.sendDepositNotification(userId, coinSymbol, transaction.amount, 'confirmed', transaction.txid);
+                    }
+                    
+                    // Store transaction in database
+                    await this.storeTransaction(userId, coinSymbol, transaction);
+                }
+            }
+        } catch (error) {
+            this.logger.error('Error processing transaction', {
+                error: error.message,
+                transaction: transaction.txid,
+                coinSymbol,
+                service: 'aegisum-tipbot'
+            });
+        }
+    }
+
+    async sendDepositNotification(userId, coinSymbol, amount, status, txid) {
+        try {
+            const bot = require('../bot/telegram-bot');
+            const statusEmoji = status === 'pending' ? '⏳' : '✅';
+            const statusText = status === 'pending' ? 'Pending' : 'Confirmed';
+            
+            const message = `${statusEmoji} **Deposit ${statusText}**
+
+💰 **Amount:** ${amount} ${coinSymbol}
+🔗 **Transaction:** ${txid.substring(0, 16)}...
+⏰ **Status:** ${statusText}
+
+${status === 'pending' ? 'Your deposit is being processed...' : 'Your deposit has been confirmed and is now available!'}`;
+
+            await bot.sendMessage(userId, message, { parse_mode: 'Markdown' });
+            
+        } catch (error) {
+            this.logger.error('Failed to send deposit notification', {
+                userId,
+                coinSymbol,
+                amount,
+                status,
+                error: error.message,
+                service: 'aegisum-tipbot'
+            });
+        }
+    }
+
+    async storeTransaction(userId, coinSymbol, transaction) {
+        try {
+            const db = require('../database/database');
+            await db.run(`
+                INSERT OR REPLACE INTO transactions 
+                (user_id, coin_symbol, txid, amount, type, confirmations, block_height, created_at)
+                VALUES (?, ?, ?, ?, 'deposit', ?, ?, datetime('now'))
+            `, [userId, coinSymbol, transaction.txid, transaction.amount, transaction.confirmations, transaction.blockheight || 0]);
+            
+        } catch (error) {
+            this.logger.error('Failed to store transaction', {
+                error: error.message,
+                service: 'aegisum-tipbot'
+            });
+        }
+    }
+
+    async getUserIdByAddress(address, coinSymbol) {
+        try {
+            const db = require('../database/database');
+            const result = await db.get(`
+                SELECT user_id FROM wallets 
+                WHERE address = ? AND coin_symbol = ?
+            `, [address, coinSymbol]);
+            
+            return result ? result.user_id : null;
+        } catch (error) {
+            this.logger.error('Failed to get user by address', {
+                address,
+                coinSymbol,
+                error: error.message,
+                service: 'aegisum-tipbot'
+            });
+            return null;
+        }
+    }
