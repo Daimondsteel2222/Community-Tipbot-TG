@@ -1,0 +1,12 @@
+{"level":"info","message":"Connected to SQLite database","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:08"}
+{"level":"info","message":"Database schema initialized","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:08"}
+{"level":"info","message":"Connected to SQLite database","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:13"}
+{"level":"info","message":"Database schema initialized","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:13"}
+{"level":"info","message":"Connected to SQLite database","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:21"}
+{"level":"info","message":"Database schema initialized","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:21"}
+{"level":"info","message":"RPC client initialized for AEGS","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:21"}
+{"level":"info","message":"RPC client initialized for SHIC","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:21"}
+{"level":"info","message":"RPC client initialized for PEPE","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:21"}
+{"level":"info","message":"RPC client initialized for ADVC","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:21"}
+{"level":"info","message":"Dashboard server components initialized","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:21"}
+{"level":"info","message":"Dashboard server running on port 12001","service":"aegisum-tipbot","timestamp":"2025-06-01 00:55:21"}

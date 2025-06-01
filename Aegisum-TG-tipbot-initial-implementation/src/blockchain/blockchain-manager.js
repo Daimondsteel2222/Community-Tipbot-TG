@@ -527,9 +527,6 @@ class BlockchainManager {
     isCoinSupported(coinSymbol) {
         return this.clients.has(coinSymbol.toUpperCase());
     }
-}
-
-module.exports = BlockchainManager;
 
     async processTransaction(transaction, coinSymbol, blockHeight) {
         try {
@@ -624,3 +621,6 @@ ${status === 'pending' ? 'Your deposit is being processed...' : 'Your deposit ha
             return null;
         }
     }
+}
+
+module.exports = BlockchainManager;
