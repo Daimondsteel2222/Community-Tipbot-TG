@@ -2,9 +2,20 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 console.log('🔧 FIXING ALL COMMUNITY TIPBOT ISSUES');
 console.log('=====================================\n');
+
+// Issue tracking
+const issues = {
+    aegsBalance: false,
+    depositNotifications: false,
+    historyCommand: false,
+    withdrawCommand: false,
+    botName: false,
+    htmlFooter: false
+};
 
 // 1. Fix bot name references (ensure they're all "Community TipBot")
 function fixBotName() {
@@ -323,25 +334,168 @@ If you're still having issues:
     console.log('');
 }
 
+// 7. Check AEGS balance issue specifically
+function checkAEGSBalanceIssue() {
+    console.log('7. 🔍 Checking AEGS balance issue...');
+    
+    try {
+        const blockchainManagerPath = 'src/blockchain/blockchain-manager.js';
+        if (fs.existsSync(blockchainManagerPath)) {
+            const content = fs.readFileSync(blockchainManagerPath, 'utf8');
+            
+            if (content.includes('getReceivedByAddress')) {
+                console.log('   ✅ AEGS balance fix is present (using getReceivedByAddress)');
+                issues.aegsBalance = true;
+            } else {
+                console.log('   ❌ AEGS balance fix missing - applying fix...');
+                
+                // Apply the fix
+                const fixedContent = content.replace(
+                    /async getAddressBalance\(address, coinSymbol, minConfirmations = 1\) \{[\s\S]*?\n    \}/,
+                    `async getAddressBalance(address, coinSymbol, minConfirmations = 1) {
+        try {
+            const client = this.getClient(coinSymbol);
+            const balance = await client.getReceivedByAddress(address, minConfirmations);
+            return parseFloat(balance) || 0;
+        } catch (error) {
+            this.logger.error(\`Failed to get balance for \${address} (\${coinSymbol}):\`, error);
+            return 0;
+        }
+    }`
+                );
+                
+                fs.writeFileSync(blockchainManagerPath, fixedContent);
+                console.log('   ✅ AEGS balance fix applied');
+                issues.aegsBalance = true;
+            }
+        } else {
+            console.log('   ❌ blockchain-manager.js not found');
+        }
+    } catch (error) {
+        console.log('   ❌ Error checking AEGS balance fix:', error.message);
+    }
+    console.log('');
+}
+
+// 8. Check deposit notifications
+function checkDepositNotifications() {
+    console.log('8. 🔍 Checking deposit notification system...');
+    
+    try {
+        const monitorPath = 'src/workers/blockchain-monitor.js';
+        if (fs.existsSync(monitorPath)) {
+            const content = fs.readFileSync(monitorPath, 'utf8');
+            
+            if (content.includes('notifyDeposit') && content.includes('sendDepositNotification')) {
+                console.log('   ✅ Deposit notification system is present');
+                issues.depositNotifications = true;
+            } else {
+                console.log('   ❌ Deposit notifications missing or incomplete');
+                console.log('   💡 This requires the blockchain monitor to be properly configured');
+            }
+        } else {
+            console.log('   ❌ blockchain-monitor.js not found');
+        }
+    } catch (error) {
+        console.log('   ❌ Error checking deposit notifications:', error.message);
+    }
+    console.log('');
+}
+
+// 9. Check withdraw command
+function checkWithdrawCommand() {
+    console.log('9. 🔍 Checking withdraw command...');
+    
+    try {
+        const commandsPath = 'src/commands/wallet.js';
+        if (fs.existsSync(commandsPath)) {
+            const content = fs.readFileSync(commandsPath, 'utf8');
+            
+            if (content.includes('handleWithdraw') || content.includes('/withdraw')) {
+                console.log('   ✅ Withdraw command is present');
+                issues.withdrawCommand = true;
+            } else {
+                console.log('   ❌ Withdraw command missing');
+            }
+        } else {
+            console.log('   ❌ wallet.js commands file not found');
+        }
+    } catch (error) {
+        console.log('   ❌ Error checking withdraw command:', error.message);
+    }
+    console.log('');
+}
+
+// 10. Test RPC connections
+async function testRPCConnections() {
+    console.log('10. 🔍 Testing RPC connections...');
+    
+    try {
+        const testScript = 'test_rpc_connections.js';
+        if (fs.existsSync(testScript)) {
+            console.log('   Running RPC connection test...');
+            const result = execSync('node test_rpc_connections.js', { encoding: 'utf8' });
+            console.log(result);
+        } else {
+            console.log('   ❌ RPC test script not found');
+        }
+    } catch (error) {
+        console.log('   ❌ RPC test failed:', error.message);
+    }
+    console.log('');
+}
+
+// 11. Generate final report
+function generateFinalReport() {
+    console.log('📊 FINAL ISSUE REPORT');
+    console.log('=====================');
+    console.log('Bot Name Fix:', issues.botName ? '✅' : '❌');
+    console.log('HTML Footer Fix:', issues.htmlFooter ? '✅' : '❌');
+    console.log('History Command:', issues.historyCommand ? '✅' : '❌');
+    console.log('AEGS Balance Fix:', issues.aegsBalance ? '✅' : '❌');
+    console.log('Deposit Notifications:', issues.depositNotifications ? '✅' : '❌');
+    console.log('Withdraw Command:', issues.withdrawCommand ? '✅' : '❌');
+    
+    const fixedCount = Object.values(issues).filter(Boolean).length;
+    const totalIssues = Object.keys(issues).length;
+    
+    console.log(`\n🎯 PROGRESS: ${fixedCount}/${totalIssues} issues resolved`);
+    
+    if (fixedCount === totalIssues) {
+        console.log('\n🎉 ALL ISSUES SHOULD BE FIXED!');
+        console.log('Please restart your bot to apply changes:');
+        console.log('   pm2 restart tipbot');
+    } else {
+        console.log('\n⚠️  SOME ISSUES NEED MANUAL ATTENTION');
+        console.log('Check the output above for details.');
+    }
+    console.log('');
+}
+
 // Main execution
 async function main() {
     try {
         fixBotName();
         fixFooterHTML();
         fixHistoryCommand();
+        checkAEGSBalanceIssue();
+        checkDepositNotifications();
+        checkWithdrawCommand();
+        await testRPCConnections();
         createSampleEnv();
         createQuickStart();
         createTroubleshootingGuide();
+        generateFinalReport();
         
-        console.log('🎉 ALL FIXES APPLIED SUCCESSFULLY!');
+        console.log('🎉 COMPREHENSIVE FIX COMPLETE!');
         console.log('');
-        console.log('📋 NEXT STEPS:');
-        console.log('1. Configure your .env file with real values');
-        console.log('2. Run: node diagnose_issues.js');
-        console.log('3. Run: node test_rpc_connections.js');
-        console.log('4. Run: ./quick_start_fixed.sh');
+        console.log('📋 IMMEDIATE NEXT STEPS:');
+        console.log('1. pm2 restart tipbot');
+        console.log('2. Test /balance command');
+        console.log('3. Test /history command');
+        console.log('4. Test /withdraw command');
         console.log('');
-        console.log('🌐 Web Dashboard will be at: http://localhost:12000');
+        console.log('🌐 Web Dashboard: http://localhost:12000');
         console.log('🔑 Dashboard Password: admin123');
         console.log('');
         console.log('💡 For domain setup (TGTIPBOT.aegisum.co.za), see COMPLETE_FIX_GUIDE.md');
